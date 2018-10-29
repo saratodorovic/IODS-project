@@ -3,7 +3,6 @@ title: "IODS course project"
 author: "Sara Todorovic"
 output:
   html_document:
-    layout: default
     theme: readable
     toc: true
     toc_depth: 2
