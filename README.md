@@ -11,5 +11,5 @@ with RStudio and RMarkdown.
 Link to my course blog can be found [here.](https://saratodorovic.github.io/IODS-project/)
 
 
-![Some inspirational views from China (credits: Sara Todorovic)](/Users/saratodorovic/Documents/GitHub/IMG_9766.jpg)
+
 
