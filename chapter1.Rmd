@@ -1,8 +1,9 @@
 
-## Introduction to Open Data Science
+## Week 1: Introduction to Open Data Science
 
 I am *thrilled* to dig into the world of open science and 
-learn new tricks with the fascinating open source materials.  
+learn new tricks with the fascinating open source materials. 
+
 Link to my GitHub repository is [here!](https://github.com/saratodorovic/IODS-project)
 
 > "Two things are infinite: the universe and human stupidity; and I'm not sure about the universe. - Albert Einstein"
