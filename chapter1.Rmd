@@ -1,4 +1,15 @@
+--- 
+title: "Introduction to Open Data Science -course"
+author: "Sara Todorovic"
 
-# About the project
+---
 
-*Write a short description about the course and add a link to your github repository here. This is an R markdown (.Rmd) file so you can use R markdown syntax. See the 'Useful links' page in the mooc area (chapter 1) for instructions.*
+## Introduction to Open Data Science
+
+I am *thrilled* to dig into the world of open science and 
+learn new tricks with the fascinating open source materials.  
+Link to my GitHub repository is [here!](https://github.com/saratodorovic/IODS-project)
+
+> "Two things are infinite: the universe and human stupidity; and I'm not sure about the universe. - Albert Einstein"
+
+
