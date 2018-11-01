@@ -1,3 +1,7 @@
+---
+output: github_document
+---
+
 ### Introduction to Open Data Science, fall 2018
 
 #### 29/10/2018
