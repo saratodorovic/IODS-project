@@ -1,7 +1,168 @@
-# Insert chapter 2 title here
+# Week 2: Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
+### *Description of the exercise phases and interpretation of the results*
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using  
+
+## Part 1: Data
+### Data description
+
+Exercise focuses on data wrangling using an original dataset called "JYTOPKYS2" by Kimmo Vehkalahti (more information [here](http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt)), creating a subset of the dataset and analysing it with basic methods, as well as with regression analysis, which is this week's topic.  
+
+```{r include=FALSE}
+learning2014 <- read.csv("~/Documents/GitHub/IODS-project/data/learning2014.csv", sep= ",", header=T)
+```
+
+The dataset is called "learning2014", and it consists of `r nrow(learning2014)` observations  
+in `r ncol(learning2014)` columns, describing each participant's learning habits.  
+
+*Here are the first six rows and the structure of the dataset. *
+
+``` {r}
+head(learning2014)
+str(learning2014)
+```
+
+Column names describe the following:   
+1. **gender** - Gender of the person  
+2. **age** - Age of the person  
+3. **attitude** - Global attitude toward statistics  
+4. **deep** - Combination of different questions regarding "deep learning", as in seeking meaning, relating ideas, use of evidence in the studies ([reference](https://www.slideshare.net/kimmovehkalahti/the-relationship-between-learning-approaches-and-students-achievements-in-an-introductory-statistics-course-in-finland))  
+5. **stra** - Combination of different questions regarding "strategic learning", as in organized studied, time management   ([reference](https://www.slideshare.net/kimmovehkalahti/the-relationship-between-learning-approaches-and-students-achievements-in-an-introductory-statistics-course-in-finland))  
+6. **surf** - Combination of different questions regarding "surface learning", as in lack of purpose, unrelated memorising and syllabus-boundness ([reference](https://www.slideshare.net/kimmovehkalahti/the-relationship-between-learning-approaches-and-students-achievements-in-an-introductory-statistics-course-in-finland))  
+7. **points** - Points from the statistics exam  
+  
+From the structure we can see that six column values are numeric or integer values, and one value is a factor value, having levels "M" or "F".  
+
+--------
+
+### Structure of the variables
+In the following code blocks can be found summaries of each variable, including the gender distribution (gender) and descriptive variables for numeric values. It can be seen that there are *almost 50 % more female participants than male participants*, *mean age* is 25.5 years, *average attitude* is around 3.1 (scale 1-5), and average values for deep, strategic and surface learning are between 2.8 and 3.7. Average points are 22.7, when the minimum is 7 and maximum is 33.   
+
+```{r include = FALSE}
+
+library(ggplot2)
+library(GGally)
+```
+```{r}
+summary(learning2014$gender)
+summary(learning2014$age)
+summary(learning2014$attitude)
+summary(learning2014$deep)
+summary(learning2014$attitude)
+summary(learning2014$deep)
+summary(learning2014$stra)
+summary(learning2014$surf)
+summary(learning2014$points)
+```
+--------  
+
+### Relationship between the variables
+In order to see the relationship between these variables, we will create scatter plots for all the into a scatter plot matrix.
+```{r}
+# This matrix plot is created using ggplot2 and GGally libraries
+ggpairs(learning2014, mapping = aes(col = gender, alpha=0.3), 
+        lower = list(combo = wrap("facethist", bins = 20)))
+
+```  
+  
+
+By eyeing the plot, we can see that the highest positive correlation is between the 'points' and 'attitude', and highest negative correlation is between 'surface learning' and 'deep learning' (because they also are kinda opposite...).  
+
+The plots also show that the distribution of exam results is divided quite equally between female and male students, but that more girls have chosen higher values in surface learning and boys generally have a better attitude compared to girl participants.
+
+
+********
+## Part 2: Regression
+### Regression analysis
+
+In this part a regression analysis for the dataset will be conducted. For the analysis, which will describe the causality of the *dependent variable* ( in this case **points** ) with chosen *explanatory variables*. The analysis seeks to figure, whether the explanatory variables explain the dependent variable. The results will show whether there is a statistical significance, hence if the explanatory variables truly explain the dependent variable.  
+
+#### 1. Choosing the explanatory variables  
+- As can be interpreted from the scatter plot above, three variables with the highest correlations towards the dependant variable **points** are **attitude**, **stra** and **surf**. Therefore we will next create a *multiple regression model*.    
+- The formula should be **y ~ x**, where **y** is the target variable and **x** the explanatory variable. In multiple regression model, all explanatory variables are added behind x, as x1, x2, x3 etc as below    
+
+> y ~ x1 + x2 + x3  
+
+#### 2. Fitting the regression model
+In the regression model exam points (*points*) is the target variable (*y*) and the three variables chosen above explanatory variables. In R creating a regression model happens with formula lm():
+```{r}
+model <- lm(points ~ attitude + stra + surf, data = learning2014)
+summary(model)
+```
+
+####**Interpretation of the summary of the fitted model:**  
+
+- According to the summary table, only *attitude* is statistically significant explanatory variable to the dependant variable.  
+
+- The residuals (distance from the regression line) are between -17.15 and 10.89 with median of 0.52, and with a total residual standard error 5.296.  
+
+- The 'estimates' show the effect of the variables to *points*  
+
+### 3. Creating second model based on statistical significance
+Since there is only one statistically significant variable, the regression model will be fitted again only with that variable:
+```{r}
+model2 <- lm(points ~ attitude, data = learning2014)
+summary(model2)
+```  
+
+- Now we can see that the standard error for the estimate has decreased a little, and the estimate increased a little  
+- Also the p-value has decreased for both intercept value and attitude variable, suggesting that the statistical significance has increased.
+
+- The **multiple R-squared** in the summary means how close the data is to the regression line, and shows the percentage of the response variable variation that is explained by a linear model. R-squared is always between 0 and 100%, where 0% means there is none of the variability of the response data around its mean, and 100% means all of the variability of the data is around its mean.
+  + In this 'model2', multiple R-squared is 0.1906 = 19 %. It means that **the model explains 19 % of the variance**.   
+  + Low values don't necessarily mean that there is no significance - as we can see there is statistical significance. It is said that [any field that attempts to explain human behavior typically has R-squared values below 50%](http://blog.minitab.com/blog/adventures-in-statistics-2/regression-analysis-how-do-i-interpret-r-squared-and-assess-the-goodness-of-fit).  
+  
+
+## Part 3: Creating diagnostic plots  
+### Diagnostic plots
+
+
+Diagnostic plots are made to validate the regression model assumptions. In R it is easy and done with the basic plot() function by giving the model as the first argument. Assumptions are always part of the models, and the fact how well the model describes the phenomenon of interest depends on how will the assumptions fit reality.  
+
+--------
+
+We will create plots for Normal QQ-plot, Residuals vs Fitted values and Residuals vs Leverage.  
+
+1. **QQ-plot** explores the assumption that the errors of the model are normally distributed
+```{r}
+plot(model2, 2)
+```  
+
+
+
+- We can see that that majority of the points follow the curve, however after the x-value 1, the curve is clearly turning a bit lower on the y-axis, making the curve to dip a little. I would still intrepret the curve as somewhat reasonable.  
+
+------  
+
+2. **Residual and fitted values** depict the constant variance of errors, and that size of errors  
+should not depend on the explanatory variable. The more scattered the values, the more reasonable.
+```{r}
+plot(model2, 1)
+```  
+
+- From the plot we can see that the residuals have spread quite equally throughout the plot randomly and are not concentrated on any fitted value specifically, so the plot is reasonable.  
+
+--------  
+
+3. **Residuals vs Leverage** plot compares the residuals to leverage, which is the impact of a single observation on the model, and helps to find influental outliers. When cases are outside of the Cook’s distance (meaning they have high Cook’s distance scores), the cases are influential to the regression results.
+
+```{r}
+plot(model2, 5)
+```  
+
+- In the plot above we can see that there are no individual cases popping out from the graph. Almost all cases are inside the Cook's distance lines.   
+
+---------
+### Conclusion  
+
+According to the data and regression analyses and model validation, we could conclude that the model created is valid for studying the relationship between the exam points and students' attitudes. 
+Lastly, here is a plot visualizing the linear relation between these two variables.  
+
+``````{r}
+# initialize plot with data and aesthetic mapping
+p1 <- ggplot(learning2014, aes(x = attitude, y = points, col =gender)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Student's attitude versus exam points")
+
+# Draw the plot
+p1
+
+```
