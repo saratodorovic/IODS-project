@@ -52,12 +52,13 @@ View(learning2014)
 ?write.csv
 # Setting IODS-folder as the working directory and saving the script
 setwd("~/Documents/GitHub/IODS-project")
-write.csv(learning2014, file="~/Documents/GitHub/IODS-project/data/learning2014.csv")
+write.csv(learning2014, file="~/Documents/GitHub/IODS-project/data/learning2014.csv",row.names=FALSE)
 
 # Checking if it works
 read.csv("~/Documents/GitHub/IODS-project/data/learning2014.csv", sep= ",", header=T)
 head(learning2014)
 str(learning2014)
+dim(learning2014)
 
 # Works :D
 
