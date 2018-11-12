@@ -1,0 +1,275 @@
+# Week 3: Logistic regression
+
+### *Description of the exercise phases and interpretation of the results*
+
+
+## Part 1: Data
+### Data description
+
+Data for this week's exercise is retrieved from UCI Machine Learning Repository by Paulo Cortez in 2008 (University of Minho, Portugal). Data consists of two joined dataframes about students' achievements in secondary education in two Portuguese schools. The first table was with students taking the math course, and the other taking the Portuguese course. For this exercise, the two datasets have been joined together (code for the data wrangling operations is [here](https://github.com/saratodorovic/IODS-project/blob/master/data/create_alc.R)).  
+
+Glimpse of the data:
+
+```{r include=FALSE}
+alc <- read.csv("~/Documents/GitHub/IODS-project/data/alc.csv", sep= ",", header=T)
+
+alc_glimpse <- alc[1:4,]
+```  
+
+
+```{r results = 'asis', echo=FALSE}
+knitr::kable(alc_glimpse)
+```  
+
+**Column names for the dataset are: **
+
+```{r}
+colnames(alc)
+```  
+
+**Structure of the data is the following:**  
+Observations: `r nrow(alc)`  
+Variables: `r ncol(alc)`  
+
+```{r}
+summary(alc)
+
+```   
+
+**Information about the attributes:**  
+- school - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)   
+- sex - student's sex (binary: 'F' - female or 'M' - male)  
+- age - student's age (numeric: from 15 to 22)  
+- address - student's home address type (binary: 'U' - urban or 'R' - rural)  
+- famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)   
+- Pstatus - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)   
+- Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3  - secondary education or 4 - higher education)   
+- Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3  - secondary education or 4 - higher education)   
+- Mjob - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')  
+- Fjob - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')  
+- reason - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')  
+- guardian - student's guardian (nominal: 'mother', 'father' or 'other')  
+- traveltime - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)  
+- studytime - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)  
+- failures - number of past class failures (numeric: n if 1<=n<3, else 4)  
+- schoolsup - extra educational support (binary: yes or no)  
+- famsup - family educational support (binary: yes or no)  
+- paid - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)  
+- activities - extra-curricular activities (binary: yes or no)  
+ nursery - attended nursery school (binary: yes or no)  
+- higher - wants to take higher education (binary: yes or no)  
+- internet - Internet access at home (binary: yes or no)  
+- romantic - with a romantic relationship (binary: yes or no)  
+- famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)  
+- freetime - free time after school (numeric: from 1 - very low to 5 - very high)  
+- goout - going out with friends (numeric: from 1 - very low to 5 - very high)  
+- Dalc - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)  
+- Walc - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)  
+- health - current health status (numeric: from 1 - very bad to 5 - very good)  
+- absences - number of school absences (numeric: from 0 to 93)  
+
+*these grades are related with the course subject, Math or Portuguese:*  
+- G1 - first period grade (numeric: from 0 to 20)  
+- G2 - second period grade (numeric: from 0 to 20)  
+- G3 - final grade (numeric: from 0 to 20, output target)  
+
+*these varables were created for the dataframe combining the alcohol consumption*  
+- alc_use - Average alcochol use on weekdays and weekends together  
+- high_use - High alcohol use (alc_use > 2), logical (T/F)  
+
+
+********
+## Part 2: Data Analysis
+
+Purpose of this analysis is to study the relationships between high and low alcohol consumption and 
+four other chosen variables, and to numerically and graphically show the distributions between the variables.  
+Logistic regression is used to define the linear model for binary value "success", the expected value of the target variable. 
+
+#####**1. Choosing the four variables**
+
+The dataset is quite interesting, because it provides multiple socially interesting factors to compare with each other. The four variables I chose to compare with the alcohol comsumption are *health, G3 (total grades), studytime and absences*. Generally research concludes that [men exceed women in high-volume drinking](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/), but research also says that [there is a clear female excess for the risk of becoming an underaged drinker](https://onlinelibrary.wiley.com/doi/full/10.1111/acer.13028).  That's why I'm including the gender variable in my analysis as well.
+
+
+##### **2. My personal hypotheses for each variables**  
+**health**: Alcohol affects the human health, so logically high consumption would affect the health status, and that students who consume less alcohol would be healthier. So I believe there might be a connection, but of course other factors, like eating habits and sports affect more.
+**G3 (grades)**: I believe there might be some connection, that students who consume more alcohol tend to get lower grades, but that the distribution is not that big.  
+**studytime** :  I believe there can be seen some kind of correlation between alcohol consumption and studytime.
+**absences**: I believe high alcohol consumption leads to more school absences.  
+
+##### **3. Distributions of variables to alcohol consumption**  
+
+**Comparison of predictive variables with the target variable (high_use): ** 
+
+```{r include = FALSE}
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+library(ggplot2)
+library(dplyr)
+
+```
+```{r}
+
+# First plot: Distributions of high alcohol consumption and health status with gender distinction
+g1 <- ggplot(alc, aes(x = high_use, y = health, col=sex)) + geom_boxplot() + ggtitle("Health status vs. alcohol consumption")  
+       
+# Second plot: Distributions of high alcohol consumption and G3(grades) with gender distinction
+g2 <- ggplot(alc, aes(x = high_use, y = G3, col = sex)) + geom_boxplot() + ylab("grade") + ggtitle("Grades vs. alcohol consumption")  
+
+# Third plot: Distributions of high alcohol consumption and study time with gender distinction
+g3 <- ggplot(alc, aes(x = high_use, y = studytime, col = sex)) + geom_boxplot() + ylab("Study time") + ggtitle("Study time vs. alcohol consumption")
+
+# Fourth plot: Distributions of high alcohol consumption and school absences with gender distinction
+g4 <- ggplot(alc, aes(x = high_use, y = absences, col = sex)) + geom_boxplot() + ylab("absence") + ggtitle("Absences vs. alcohol consumption")
+
+plot <- multiplot(g1, g2, g3, g4, cols=2) + geom_smooth(method = 'loess')  
+
+```  
+
+**Summary statistics:**  
+```{r}
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_health = mean(health), mean_studytime = mean(studytime), mean_grade = mean(G3), mean_absence = mean(absences))
+```  
+### Interpretation  
+As the data was grouped by gender, we can see results for both male and female high and low alcohol consumers.  
+
+* In plot 1 in upper left, health status is generally the same for both male and female students, with a drop in the median value within low-alcohol consuming female students, which is slightly surprising. Male students have exactly same range of answers and the same median value of 4, when female high-alcohol consuming students's answers are more dispersed. In the summary table we can see that the mean health statuses are quite the same for both genders, but high-alcohol consuming students have estimated their health status to be slightly better than low-alcohol consumers.  
+
+* In plot 2 on the upper right the study times differ between genders more than between the consumption factor. Therefore my hypothesis that there is a correlation between alcohol consumption and study time does not quite make sense, but it can be seen from the statistics that boys study less but also both boys and girls who consume more alcohol study a bit less in average.  
+
+* In plot 3 in down left, we can see that the grades are quite equally distributed with students who are low-alcohol consumers. Withing students who are high-alcohol students, girls get generally slightly better grades than boys, and only boys have clear outliers from the data (with bad grades) in both low- and high-alcohol consuming students. So according to my hypothesis, alcohol consumption has an effect on total grades, but might still not be the only explanatory factor.  
+
+* In plot 4 in down right, can be seen that girls in both groups have more outlier individuals with many absences. As box the statistics, we can see that high-alcohol consuming students have averagely more absences in both gender classes.    
+
+***  
+
+## Part 3: Logistic regression  
+### Logistic regression to find relationships between variables  
+
+First we will create a logistic regression model and study its summary and coefficients.  
+```{r}
+m <- glm(high_use ~ sex + health + studytime + G3 + absences , data = alc, family = "binomial")
+summary(m)
+coef(m)
+```  
+* We can see that the statistically significant variables by high alcohol consumption in order are absences, sex, studytime and grades. 
+
+* Health is insignificant, and the p-value for grades is greater than 0.05, so I will exclude them from the next model and do it again.
+
+**Next let's see the coefficients as odd ratios:**
+
+```{r}
+m <- glm(high_use ~ sex + studytime + absences , data = alc, family = "binomial")
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+# Computing confidence intervals (CI)
+CI <- confint(m) %>% exp
+# Printing out the odds ratios with their confidence intervals
+cbind(OR, CI)
+```  
+* The larger the Odd Ratio, the more positive relationship. We see that sex and absences have the highest Odd Ratios, and that sex has also the biggest confidence interval.  
+
+***
+
+## Part 4: Predictions  
+
+In this part the predictive power of the model will be explored. 
+
+```{r}
+
+# Fitting the model with statistically significant variables
+m <- glm(high_use ~ sex + absences + studytime, data = alc, family = "binomial")
+
+# Predict() the probability of high_use
+probabilities <- predict(m, type = "response")
+
+# Add the predicted probabilities to 'alc'
+alc <- mutate(alc, probability = probabilities)
+
+# Use the probabilities to make a prediction of high_use
+alc <- mutate(alc, prediction = probabilities > 0.5)
+
+# Tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)%>% prop.table %>% addmargins()
+
+```  
+```{r}
+ggplot(alc, aes(x = probability, y = high_use, col=prediction)) + geom_point()
+
+```  
+
+* From the plot and the data we see that the model predicts less students do belong to high-alcohol consumption category.  
+* Model's are never perfect, since there is always a chance of incorrectly classified observations. The the model's average number of wrong predictions can be computed with accuracy and loss function. The smaller the number (in scale from 0-1), the better, since it means less errors.  
+
+```{r}
+# Defining a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# Calling loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, alc$probability)
+```  
+*  0.2565 is the number of errors retreived using loss function
+
+**EXTRA:**  
+When conducting a 10-fold cross-validation to the model, we get following results:  
+
+```{r}
+library(boot)
+# K-fold cross validation, K = 10 because of the 10-fold CV
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+```    
+* Here we see that the number of incorrectly classified observations with 10-fold cross-validation model is 0.2644, which divides the data into 10 sets, of which K-1 are used for training (making the predictions, finding the model) and one for testing (applied to an independent dataset), and this is repeated ten times. We can see that the average loss is slightly greater than with the loss function.
+
+
+
+
+
