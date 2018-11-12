@@ -152,7 +152,6 @@ plot(model2, 5)
 
 - In the plot above we can see that there are no individual cases popping out from the graph. Almost all cases are inside the Cook's distance lines.   
 
----------
 ### Conclusion  
 
 According to the data and regression analyses and model validation, we could conclude that the model created is valid for studying the relationship between the exam points and students' attitudes. 
@@ -165,4 +164,7 @@ p1 <- ggplot(learning2014, aes(x = attitude, y = points, col =gender)) + geom_po
 # Draw the plot
 p1
 
-```
+```  
+
+
+  

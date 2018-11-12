@@ -552,7 +552,7 @@ cbind(OR, CI)</code></pre>
 </div>
 <div id="part-4-predictions" class="section level2">
 <h2>Part 4: Predictions</h2>
-<p>In this part the predictive power of the model will be explored. Predictions</p>
+<p>In this part the predictive power of the model will be explored.</p>
 <pre class="r"><code># Fitting the model with statistically significant variables
 m &lt;- glm(high_use ~ sex + absences + studytime, data = alc, family = &quot;binomial&quot;)
 
@@ -599,7 +599,7 @@ cv &lt;- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
 
 # average number of wrong predictions in the cross validation
 cv$delta[1]</code></pre>
-<pre><code>## [1] 0.2565445</code></pre>
+<pre><code>## [1] 0.2591623</code></pre>
 <ul>
 <li>Here we see that the number of incorrectly classified observations with 10-fold cross-validation model is 0.2644, which divides the data into 10 sets, of which K-1 are used for training (making the predictions, finding the model) and one for testing (applied to an independent dataset), and this is repeated ten times. We can see that the average loss is slightly greater than with the loss function.</li>
 </ul>
