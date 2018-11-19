@@ -244,7 +244,7 @@ ggplot(alc, aes(x = probability, y = high_use, col=prediction)) + geom_point()
 
 ```  
 
-* From the plot and the data we see that the model predicts less students do belong to high-alcohol consumption category.  
+* From the plot and the data we see that the model predicts less students do belong to high-alcohol consumption category.   
 * Model's are never perfect, since there is always a chance of incorrectly classified observations. The the model's average number of wrong predictions can be computed with accuracy and loss function. The smaller the number (in scale from 0-1), the better, since it means less errors.  
 
 ```{r}
@@ -270,7 +270,7 @@ cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
 # average number of wrong predictions in the cross validation
 cv$delta[1]
 ```    
-* Here we see that the number of incorrectly classified observations with 10-fold cross-validation model is 0.2644, which divides the data into 10 sets, of which K-1 are used for training (making the predictions, finding the model) and one for testing (applied to an independent dataset), and this is repeated ten times. We can see that the average loss is slightly greater than with the loss function.
+* Here we see that the number of incorrectly classified observations with 10-fold cross-validation model is 0.2591, which divides the data into 10 sets, of which K-1 are used for training (making the predictions, finding the model) and one for testing (applied to an independent dataset), and this is repeated ten times. We can see that the average loss is slightly greater than with the loss function.
 
 
 
