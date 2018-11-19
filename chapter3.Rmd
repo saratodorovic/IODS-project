@@ -270,7 +270,7 @@ cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
 # average number of wrong predictions in the cross validation
 cv$delta[1]
 ```    
-* Here we see that the number of incorrectly classified observations with 10-fold cross-validation model is 0.2591, which divides the data into 10 sets, of which K-1 are used for training (making the predictions, finding the model) and one for testing (applied to an independent dataset), and this is repeated ten times. We can see that the average loss is slightly greater than with the loss function.
+* Here we see that the number of incorrectly classified observations with 10-fold cross-validation model is `r cv$delta[1]`, which divides the data into 10 sets, of which K-1 are used for training (making the predictions, finding the model) and one for testing (applied to an independent dataset), and this is repeated ten times. We can see that the average loss is slightly greater than with the loss function.
 
 
 
