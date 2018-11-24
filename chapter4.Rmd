@@ -1,0 +1,201 @@
+
+
+
+# Week 4: Clustering and classification
+
+### *Description of the exercise phases and interpretation of the results*
+
+
+## Part 1: Data
+### Data description  
+This week's exercise introduces classification and clustering as visual tools to explore statistical data.  
+The data used is a readily available R dataset in the MASS library called Boston. It contains data about housing values in Boston, USA. More information about the data can be found [here](https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html).   
+
+#### Column descriptions:  
+
+**crim** = per capita crime rate by town.  
+**zn** = proportion of residential land zoned for lots over 25,000 sq.ft.  
+**indus** = proportion of non-retail business acres per town.  
+**chas** = Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).  
+**nox** = nitrogen oxides concentration (parts per 10 million).  
+**rm** = average number of rooms per dwelling.  
+**age** = proportion of owner-occupied units built prior to 1940.  
+**dis** = weighted mean of distances to five Boston employment centres.  
+**rad** = index of accessibility to radial highways.  
+**tax** = full-value property-tax rate per \$10,000.  
+**ptratio** = pupil-teacher ratio by town.  
+**black** = 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.  
+**lstat** = lower status of the population (percent).  
+**medv** = median value of owner-occupied homes in \$1000s.  
+
+
+```{r}
+library(MASS)  
+data(Boston)
+str(Boston) 
+summary(Boston)
+```  
+As we can see the data consists of 506 observations and 14 variables.   
+
+In the next graph we can see the correlations between the variables with 0.05 significance level. 
+```{r include =FALSE}
+library(tidyverse)
+library(dplyr)
+library(corrplot)
+```
+```{r}
+cor_matrix <- cor(Boston) %>% round(2)
+res1 <- cor.mtest(Boston, conf.level = .95)
+corrplot(cor_matrix, p.mat = res1$p, method = "color", type = "upper",
+         sig.level = c(.001, .01, .05), pch.cex = .9,
+         insig = "label_sig", pch.col = "white", order = "AOE")
+```  
+
+As we can see the darker the red colour, the more positive correlation the two variables have, and the darker the blue colour, the stronger negative correlation the variables have. Almost all variables are significant in 0.05 % significance level. The strongest correlation, according to the matrix, is between the distance to employment centers and age and nitrogen oxyides concentration, lower status (%) and median value of owner-occupied homes, to name a few.   
+
+## Part 2: Scaling and dividing the data
+
+At this point the data will be scaled for later use. Scaling is necessary for the later linear discriminant analysis, because it assumes the variables are normally distributed and each variable has same variance.  
+
+```{r}
+boston_scaled <- scale(Boston)
+summary(boston_scaled)
+
+```  
+Scaling scaled the variables, and as we can see, the min and max values are different. Scale-function, with default settings, calculates the mean and standard deviation of the columns, then "scales" each element by those values by subtracting the mean and dividing by the sd. As we can see, the 'age' parameter has minus values.  
+
+Next I will create a categorical variable from the scaled crime rate variable. Summary of the crime variable:  
+```{r}
+# First converting the matrix into a dataframe
+boston_scaled <- as.data.frame(boston_scaled)
+summary(boston_scaled$crim)
+``` 
+
+The break points will be the quantiles (25% - 100%). After creating the variable, I will remove the old 'crim' variable and replace it with the new 'crime', which, in the end, contains the amount of 'cases' in each quantile group.  
+
+```{r}
+# Creating a  quantile vector, and creating a categorical variable 'crime'
+bins <- quantile(boston_scaled$crim)
+# Creating categorical variable 'crime'
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label=c("low", "med_low", "med_high", "high"))  
+# Table of the new crime variable
+table(crime)  
+# Removing original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+# Adding the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+#### Training and testing set:  
+Splitting the data into training and testing sets lets us check how well our model performs. Training of the model is done with the training set (80 % of the dataset), and the model is then tested and data predicted with the testing set.  This allows us to see how well our model, for example, classifies different points into groups.  
+
+Next I will divide the dataset to train and test sets. The functions of the code is commented int he code block.
+
+```{r}
+# Choosing 80 % of the data as the training set based on the number of rows in the dataset
+ind <- sample(nrow(boston_scaled),  size = nrow(boston_scaled) * 0.8)
+train <- boston_scaled[ind,]
+# Testing set is the data minus the training set
+test <- boston_scaled[-ind,]
+# Saving the actual correct classes into a new variable
+correct_classes <- test$crime
+# Removing the crime variable from test data
+test <- dplyr::select(test, -crime)
+```  
+
+## Part 3: Linear discriminant analysis  
+#### LDA is a classification method that models either binary or multiple class variables, and where the target variable is categorial (like the crime variable). It is used to find patterns within the data and classify it effectively.
+LDA is used to predict classes for new data and to find variables that either discriminate or separate the classes best (DataCamp). The difference between classification and clustering is, that in classification the classes are known and the model is trained with the training set from the data, and it classifies new values into classes. Clustering, on the other hand, means that the classes are unknown, but the data is grouped based on the similarities of the observations. If the assumptions of discriminant analysis are met, it is more powerful than logistic regression, but the assumptions are rarely met.  
+
+Linear discriminant analysis for training data where **crime** is the target and all other variables as predictors:  
+```{r}
+lda.fit <- lda(crime ~ ., data = train)
+lda.fit
+```   
+The LDA function calculates the group means for each variable, coefficients and the proportions of trace (which is the proportion of between-class variance that is explained by successive discriminant functions). Here there are three linear discriminants, since the crime variable has four classes (total number is n-1).  
+
+
+```{r}
+# Creating a biplot to visualize the LDA
+# Creating an arrow function (DataCamp)
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# Converting the target classes as numeric ()
+classes <- as.numeric(train$crime)
+# Plotting the LDA results
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 1)
+```  
+Next phase is to fit the testing data to the LDA and predict the classes for the values. Since the correct values are stoder in the *correct_classes* variable, I will cross-tabulate the predicted values and the correct values to see whether the classifier classified the values correctly.  
+```{r}
+# Predicting the classes with test data
+lda.pred <- predict(lda.fit, newdata = test)
+# Cross-tabulating the correct classes and the predicted classes (lda.pred$class)
+table(correct = correct_classes, predicted = lda.pred$class)
+```  
+* Almost all high values were correclty predicted  
+* Almost half of the low values were falsely predicted and classified into med_low and some in med_high classes 
+* Most of the med_high values were correctly classified, apart from 8 values in med_low class and one in low class  
+
+The model is best to classify high values, but the lower the value, the less correct the prediction.  
+
+## Part 4: Distance measuresand clustering  
+#### Distance measures are used to calculate how similar or dissimilar observations are from each other. K-means is one way to calculate clustering, and is easy to use. The k-means algorithm is updated until the centroids and clusters don't change. 
+
+In order to find clusters for the dataset, I will reload the Boston dataset and standardize it. Then I will calculate the distances between the observations and use k-means to find the optimal amount of clusters.  The optimal amount of clusters is calculated with the total within cluster sum of squares by adding a WCSS to every cluster nad adding them together. The optimal number is reached, when the WCSS drops radically.  
+
+Comments are in the codeblock.  
+
+```{r}
+# Loading the Boston dataset
+data(Boston)
+
+# Scaling the data to get comparable distances
+scaled <- scale(Boston)
+
+# Calculating the Euclidean distances for the dataset
+dist_eu <- dist(Boston)
+summary(dist_eu)
+# Calculating also the distance with "Manhattan"-method
+dist_man <- dist(Boston, method = "manhattan")
+summary(dist_man)
+
+
+```  
+As we can see, the [manhattan method](http://artis.imag.fr/~Xavier.Decoret/resources/maths/manhattan/html/) makes the distances longer.  Next we do the K-means clustering and find the optimal number of clusters.  Comments are in the codeblock.  
+
+```{r}
+library (ggplot2)
+set.seed(123)
+
+# First deetermining the number of clusters in order to find the ideal amount
+k_max <- 10
+
+# Calculating the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(Boston, k)$tot.withinss})
+
+# Visualize the results
+qplot(x = 1:k_max, y = twcss, geom = 'line') 
+
+# We see that 2 clusters is a good amount (the point where the line rapidly drops)
+# K-means clustering
+km <-kmeans(Boston, centers = 2)
+
+# Plotting the Boston dataset with clusters, taking columns 6 to 10 for reference
+pairs(Boston[6:10], col = km$cluster)
+```  
+
+
+
+
+
+
+
+
+
