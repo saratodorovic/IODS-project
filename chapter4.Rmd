@@ -194,6 +194,8 @@ km <-kmeans(Boston, centers = 2)
 # Plotting the Boston dataset with clusters, taking columns 6 to 10 for reference
 pairs(Boston[6:10], col = km$cluster)  
 ```  
+
+
 Here we see that the data is classified into two different clusters, and that the groups are quite separate from each others, except some points (like in 'rad' and all 'dis', 'age' and 'rm' variables).  
 
 
