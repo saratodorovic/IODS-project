@@ -29,8 +29,10 @@ The data used is a readily available R dataset in the MASS library called Boston
 **medv** = median value of owner-occupied homes in \$1000s.  
 
 
+```{r include = FALSE}
+library(MASS)
+```
 ```{r}
-library(MASS)  
 data(Boston)
 str(Boston) 
 summary(Boston)
