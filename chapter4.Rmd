@@ -134,6 +134,8 @@ classes <- as.numeric(train$crime)
 plot(lda.fit, dimen = 2, col = classes, pch = classes)
 lda.arrows(lda.fit, myscale = 1)
 ```  
+
+
 Next phase is to fit the testing data to the LDA and predict the classes for the values. Since the correct values are stoder in the *correct_classes* variable, I will cross-tabulate the predicted values and the correct values to see whether the classifier classified the values correctly.  
 ```{r}
 # Predicting the classes with test data
@@ -190,8 +192,10 @@ qplot(x = 1:k_max, y = twcss, geom = 'line')
 km <-kmeans(Boston, centers = 2)
 
 # Plotting the Boston dataset with clusters, taking columns 6 to 10 for reference
-pairs(Boston[6:10], col = km$cluster)
+pairs(Boston[6:10], col = km$cluster)  
 ```  
+Here we see that the data is classified into two different clusters, and that the groups are quite separate from each others, except some points (like in 'rad' and all 'dis', 'age' and 'rm' variables).  
+
 
 
 
