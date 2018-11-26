@@ -51,8 +51,8 @@ dim(human) # 195 observations, 19 variables
 
 # Transforming GNI variable to numeric with string manipulation by replacing commas
 library(stringr)
-str_replace(human$GNI, pattern=",", replace ="")%>% as.numeric
-str(human$GNI)
+human$GNI <- str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric
+str(human)
 
 # Excluding unnecessary dataand removing NA values
 library(dplyr)
