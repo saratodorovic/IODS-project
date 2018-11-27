@@ -72,5 +72,5 @@ human_ <- select(human_, -Country) # Removing country from dataframe, 155 observ
 
 View(human_)
 # Overwriting the file
-write.csv(human_, file="~/Documents/GitHub/IODS-project/data/human.csv")
+write.csv(human_, file="~/Documents/GitHub/IODS-project/data/human.csv", row.names = TRUE)
 
