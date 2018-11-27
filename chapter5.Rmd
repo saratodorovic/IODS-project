@@ -1,0 +1,148 @@
+  
+  
+  
+# Week 5: Dimensionality reduction techniques
+
+### *Description of the exercise phases and interpretation of the results*  
+
+## Part 1: Data  
+### Data description  
+This week's exercise is about reducing the dimensionality of multidimensional data. The dataset originates from the United Nations Development Programme and includes 155 observations from different countries and 8 variables, that are:  
+
+*HDI ranking HDI, Life expectancy, Expected years of education, Mean education time, Gross national income, GNI minus ranking, Gender inequality index (GII) ranking, GII, Maternal mortality, Adolescent birth rate, Females in the parliament, Secondary education for Females and Males, Labor force participation for F and M And ratios of Females and Males in secondary education and labor force.*  
+
+The data description can be found [here](http://hdr.undp.org/en/content/human-development-index-hdi) and techiques for calculating each of these variables can be found [here](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf).  
+
+
+**Graphical overview and data structure**:  
+
+
+```{r include=FALSE}
+human <- read.csv("~/Documents/GitHub/IODS-project/data/human.csv", sep= ",", header=T, row.names = 1)
+library(GGally)
+library(corrplot)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+``` 
+```{r}
+# Structure of the data
+str(human)
+summary(human)
+```  
+All variables are numeric. Interesting how the the maximum representation of females in parliament is 57.50 % and minimum is zero... Next two graphs show the structure of the variables and the correlations between them.     
+
+```{r}
+# Visualizing variables
+ggpairs(human)
+cor(human)
+# Creating a correlation matrix and visualizing the correlations
+res1 <- cor.mtest(human, conf.level = .95)
+cor(human) %>% corrplot(p.mat = res1$p, method = "color", type = "upper",
+         sig.level = c(.001, .01, .05), pch.cex = .9,
+         insig = "label_sig", pch.col = "white", order = "AOE")
+```   
+
+Most of the variables are not normally distributed, and there is positive skewness for example in maternal mortality, adolescence birth rate and GNI, and negative skewness in labor ratio and life expectancy. Quite many of the variables correlate with each other rather well, considering that the data and variables are quite well known and straight-forward. Biggest positive correlations can be seen between maternal mortality and adolescence birth ratio, life expectancy and expected years in education, and negative correlation between maternal mortality and life expectancy. As a single variable, adolescent birth date (also referred to as the age-specific fertility rate for women aged 15–19) has quite significant correlation with all variables, since the higher fertility rate for women under 19 years old, the smaller is the life expectancy and education, but higher risk or maternal mortality.  From the correlation matrix we can see that almost all variables are statistically significant with 95 % confidence level.  
+
+## Part 2: Principal Component Analysis (PCA)  
+
+At this part of the analysis I will perform PCA first on the *non standardized* data, and after on the *standardized* data. PCA is a statistical unsupervised procedure, one of dimensionality reduction techniques, which are used to reduce the "noise" and error of the data, and to find the phenomenon of interest by focusing only on the essential dimensions. In PCA the data is first transformed to another 'space', with equal number of dimensions with the original data. The first PC has the maximum amount of variance from the original dataset, the second has what the first one didn't capture, third one what the second one didn't and so on, giving uncorrelated variables. Therefore usually the *first few principal components* are sufficient to represent the data.  
+
+First PCA on non standardized data:
+```{r}
+# Performing PCA on non standardized human data
+pca_human <- prcomp(human)
+summary(pca_human)
+# Drawing a biplot of the PC1 and PC2
+s <- summary(pca_human)
+# Drawing a biplot of the PC1 and PC2
+pca_pr <- round(100*s$importance[2, ], digits = 1)
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+
+```   
+
+Without any kind of standardization, the PCA performs quite badly, as we see from the plot above. PCA projects the original data to direction with maximum variance - hence, without rescaling, PCA will load on the large variances, and therefore only one component explains all the data and correlation (PC1 100%) vs PC2 0%). As in the plot above, we see that the data has been indeed loaded mostly on the frst component, and doesn't show any meaningful results. Only Qatar, and a few other variables stand out in this plot. Arrows show the direction to the original variables and PC's. GNI variable stands out in this plot substantially because of its length, which is propotional to its standard deviation. It's arrow is also pointing to the second PC as the only variable. 
+
+Next PCA on standardized data, where mean is 0:  
+```{r}
+
+# Standardizing data
+human_std <- scale(human)
+# Performing PCA on standardized human data
+pca_human <- prcomp(human_std)
+summary(pca_human)
+# Print the summary
+s <- summary(pca_human)
+# Drawing a biplot of the PC1 and PC2
+pca_pr <- round(100*s$importance[2, ], digits = 1)
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```   
+
+Here the data has been scaled so that the data is independent of any rescaling, and is therefore easier to interpret. From the table we see that the data is more evenly distributed between the components. From the arrows we can see the correlations between the variables, for example, expected years of education and life expetancy are very close to each other, and they have correlation 0.79, and negative correlation with the arrows on the positive side of the x-axis. Also we see that maternal mortality rate and adolescent birth rate are very highly correlated, but have negative correlation with expected education and life expectancy respectively. Female/male labor force ratio and female representation in the parliament variables are with both sides (negative and positive of x-axis) close to zero, implying quite neutral correlation. The angle between points and variables imply their correlation. For example, from the plot one could say based on the country names that least developed countries are more likely to have negative correlation between life expectancy, for example and to be closer to the arrows for maternal mortality rate, and more developed countries situated close to higher values for expected years of education, such as Switzerland. We can also say that the variables are pointing quite evenly to both dimensions based on the directions of the arrows.    
+
+*****
+## Part 3: Multiple Correspondance Analysis  
+#### Data is from R package Factominer  
+Multiple correspondace analysis is also a dimensionality reduction method, which is used to analyse several categorical variables.  
+
+First I will wrangle the data to our liking, keeping only cetrain columns from the 'tea' data.  All the variables are categorical factor variables.  
+
+
+
+```{r}
+require(FactoMineR)
+data("tea")
+tea_time = tea[, c("Tea", "How", "how", "sugar", "where", "lunch")]
+summary(tea_time)
+str(tea_time)
+```   
+Visualization of the variables:  
+
+
+```{r}
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar(aes(fill = "red")) + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+```   
+
+Next I'll perform MCA analysis on the tea_time data:  
+```{r}
+mca <- MCA(tea_time, graph = FALSE)
+summary(mca)
+
+```  
+From the summary table we can read the variances and the predentages of variances for each dimension. Individuals show the rows (here only 10 first), contribution and squared correlations, and categories the names of categories. 5 variables have v.values above 1.96/less than -1.96, which means its coordinate is significantly different from zero. The last box, categorial variables shows the links between dimensions and variables, and the closer to 1, the stronger link. Strongest are low-capital 'how' and 'where' variables to Dim.1.  Next is a plotted MCA:  
+```{r}
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage = "quali")
+```  
+
+The categories under one variable have the same colour. Quite many variables are similar to each other, and the most significant outliers are tea shop and unpacked. From the previous table we can see that these two variables belong to the 'how' and 'where' groups, so as predicted, they are far from zero. 
+
+```{r}
+cats <- apply(tea_time, 2, function(x) nlevels(as.factor(x)))
+
+# data frame with variable coordinates
+mca1_vars_df = data.frame(mca$var$coord, Variable = rep(names(cats), cats))
+
+# data frame with observation coordinates
+mca1_obs_df = data.frame(mca$ind$coord)
+
+# plot of variable categories
+ggplot(data = mca1_obs_df, aes(x = Dim.1, y = Dim.2)) +
+  geom_hline(yintercept = 0, colour = "gray70") +
+  geom_vline(xintercept = 0, colour = "gray70") +
+  geom_point(colour = "gray50", alpha = 0.7) +
+  geom_density2d(colour = "gray80") +
+  geom_text(data = mca1_vars_df, 
+            aes(x = Dim.1, y = Dim.2, 
+                label = rownames(mca1_vars_df), colour = Variable)) +
+  ggtitle("MCA plot of variables using R package FactoMineR") +
+  scale_colour_discrete(name = "Variable")
+```   
+
+
+From this plot we can see both observations and categories, as well as density curves to see where the observations are concentrated.  
+
