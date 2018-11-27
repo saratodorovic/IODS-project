@@ -40,7 +40,7 @@ write.csv(human, file="~/Documents/GitHub/IODS-project/data/human.csv", row.name
 # WEEK 5
 
 
-human <- read.csv("~/Documents/GitHub/IODS-project/data/human.csv", sep = ",")
+human <- read.csv("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human1.txt", sep = ",")
 
 # Variables include HDI ranking, HDI, Life expectancy, Education expectancy (years), Mean education time, 
 # Gross national income, GNI minus ranking, Gender inequality index ranking, GII, Maternal mortality,
@@ -54,7 +54,7 @@ library(stringr)
 human$GNI <- str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric
 str(human)
 
-# Excluding unnecessary dataand removing NA values
+# Excluding unnecessary data and removing NA values
 library(dplyr)
 
 keep <- c("Country", "Edu2.FM", "Labo.FM", "Life.Exp", "Edu.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
@@ -63,13 +63,14 @@ human <- select(human, one_of(keep))
 data.frame(human[-1], comp = complete.cases(human))
 # Filtering the missing values out of the data
 human <- filter(human, complete.cases(human)) # Now 155 observarions, so 40 got filtered
-
+View(human)
 # Removing the regions and 'world' from the dataframe and changing country names as rownames
 last <- nrow(human) - 7 # Last index
 human_ <- human[1:last, ] # choosing all rows up til last index
 row.names(human_) <- human_$Country # Adding countries as rownames
 human_ <- select(human_, -Country) # Removing country from dataframe, 155 observations and 8 variables
-human <- human_
 
+View(human_)
 # Overwriting the file
-write.csv(human, file="~/Documents/GitHub/IODS-project/data/human.csv", row.names = F)
+write.csv(human_, file="~/Documents/GitHub/IODS-project/data/human.csv")
+
