@@ -12,7 +12,7 @@ colnames(RATS) # ID, group, and "WD1", "WD8","WD15", "WD22", "WD29", "WD36", "WD
 str(BPRS) # 40 obs. of  11 variables, all integers
 str(RATS) # 16 obs. of  13 variables, all integers
 
-# Factor treatment & subject
+# Factor 
 BPRS$treatment <- factor(BPRS$treatment)
 BPRS$subject <- factor(BPRS$subject)
 RATS$Group <- factor(RATS$Group)
@@ -26,13 +26,17 @@ library(tidyr)
 BPRSL <-  BPRS %>% gather(key = weeks, value = bprs, -treatment, -subject)
 RATSL <- RATS  %>% gather(key = time, value = rats, -Group, -ID)
 
-# Creating variables week and Time to the datasets by extracting first the week number and the 'WD' number (whatever that means)
+# Creating variables week and Time to the datasets by extracting first the week number and the day.
 BPRSL <-  BPRSL %>% mutate(week = as.integer(substr(weeks, 5,5)))
 RATSL <- RATSL %>% mutate(Time = as.integer(substr(time, 3,3)))
 str(BPRSL)
 str(RATSL)
 head(BPRSL)
 head(RATSL)
+
+# Save tables
+write.csv(BPRSL, file="~/Documents/GitHub/IODS-project/data/BPRSL.csv")
+write.csv(RATSL, file="~/Documents/GitHub/IODS-project/data/RATSL.csv")
 
 # Main difference is that in both datasets, when converting from the wide to long form, 
 # is that the data is now grouped by the time variable, and instead of each row representing all results for one observation for all weeks,
