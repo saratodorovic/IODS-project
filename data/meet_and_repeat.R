@@ -28,7 +28,7 @@ RATSL <- RATS  %>% gather(key = time, value = rats, -Group, -ID)
 
 # Creating variables week and Time to the datasets by extracting first the week number and the day.
 BPRSL <-  BPRSL %>% mutate(week = as.integer(substr(weeks, 5,5)))
-RATSL <- RATSL %>% mutate(Time = as.integer(substr(time, 3,3)))
+RATSL <- RATSL %>% mutate(Time = as.integer(substr(time, 3,4)))
 str(BPRSL)
 str(RATSL)
 head(BPRSL)
